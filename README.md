@@ -14,72 +14,85 @@ To perform regular differncing,seasonal adjustment and log transformatio on inte
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-data = pd.read_csv('Toyota.csv')
-
-
-print(data.columns)
-
-
-series = data['Price']
-
-
-series_filled = series.fillna(method='ffill')
-
-
-plt.figure(figsize=(10,4))
-plt.plot(series_filled, label='Original Price')
-plt.title('Original Price Series')
-plt.xlabel('Index')
-plt.ylabel('Price')
-plt.legend()
-plt.show()
-
-
-diff_series = series_filled.diff().dropna()
-plt.figure(figsize=(10,4))
-plt.plot(diff_series, label='Differenced Price')
-plt.title('After Regular Differencing')
-plt.xlabel('Index')
-plt.ylabel('Differenced Price')
-plt.legend()
-plt.show()
-
-
-log_series = np.log(series_filled + 1)
-plt.figure(figsize=(10,4))
-plt.plot(log_series, label='Log-Transformed Price')
-plt.title('Log-Transformed Series')
-plt.xlabel('Index')
-plt.ylabel('Log(Price+1)')
-plt.legend()
-plt.show()
-
-
-seasonal_diff = series.diff(12).dropna()
-
-plt.figure(figsize=(10,4))
-plt.plot(seasonal_diff, label='Seasonally Differenced (lag=12)')
-plt.title('Seasonally Differenced Price Series (Period=12)')
-plt.legend()
-plt.show()
-
+from statsmodels.tsa.seasonal import seasonal_decompose
+data=pd.read_csv('gold_price_data.csv')
+data.head()
+data['Date']=pd.to_datetime(data['Date']) 
+data.set_index('Date', inplace=True)
 ```
+```
+data['Value_diff'] = data['Value'] - data['Value'].shift(1)
+result = seasonal_decompose(data['Value'], model='additive', period=12)
+data['Value_sea_diff'] = result.resid
+data['Value_log'] = np.log(data['Value'])
+data['Value_log_diff'] = data['Value_log'] - data['Value_log'].shift(1)
+result_log_diff = seasonal_decompose(data['Value_log_diff'].dropna(), model='additive', period=12)
+data['Value_log_seasonal_diff'] = result_log_diff.resid
+plt.figure(figsize=(16, 16))
+plt.subplot(6, 1, 1)
+plt.plot(data['Value'], label='Original')
+plt.legend(loc='best')
+plt.title('Original Gold Price Data')
+plt.xlabel('Date')
+plt.ylabel('Value')
+```
+```
+plt.subplot(6, 1, 2)
+plt.plot(data['Value_diff'], label='Regular Difference')
+plt.legend(loc='best')
+plt.title('Regular Differencing')
+plt.xlabel('Date')
+plt.ylabel('Value')
+```
+```
+plt.subplot(6, 1, 3)
+plt.plot(data['Value_sea_diff'], label='Seasonal Adjustment')
+plt.legend(loc='best')
+plt.title('Seasonal Adjustment')
+plt.xlabel('Date')
+plt.ylabel('Value')
+```
+```
+plt.subplot(6, 1, 4)
+plt.plot(data['Value_log'], label='Log Transformation')
+plt.legend(loc='best')
+plt.title('Log Transformation')
+plt.xlabel('Date')
+plt.ylabel('Value')
+```
+```
+plt.subplot(6, 1, 5)
+plt.plot(data['Value_log_diff'], label='Log Transformation and Regular Differencing')
+plt.legend(loc='best')
+plt.title('Log Transformation + Regular Differencing')
+plt.xlabel('Date')
+plt.ylabel('Value')
+```
+```
+plt.subplot(6, 1, 6)
+plt.plot(data['Value_log_seasonal_diff'], label='Log + Regular + Seasonal Differencing')
+plt.legend(loc='best')
+plt.title('Log Transformation + Regular + Seasonal Differencing')
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.tight_layout()
+plt.show()
+```
+
 
 ### OUTPUT:
 
 
 REGULAR DIFFERENCING:
-<img width="1091" height="487" alt="image" src="https://github.com/user-attachments/assets/1a3b1b9e-f071-44d7-b74b-ef26077f9058" />
+<img width="736" height="175" alt="image" src="https://github.com/user-attachments/assets/f66d4bac-8bdd-444d-88aa-c40f9455c8b2" />
 
 
 SEASONAL ADJUSTMENT:
-<img width="1067" height="474" alt="image" src="https://github.com/user-attachments/assets/9b7d1a0d-1be2-4af4-bc1a-86bf60696610" />
+<img width="738" height="178" alt="image" src="https://github.com/user-attachments/assets/6711bc37-3b9f-4deb-90de-bbe639d9d6fb" />
 
 
 LOG TRANSFORMATION:
-<img width="1077" height="481" alt="image" src="https://github.com/user-attachments/assets/f49672ee-9f1d-4c49-aff0-6c27db071846" />
+<img width="713" height="177" alt="image" src="https://github.com/user-attachments/assets/608dd68a-4a16-44a4-a6ad-7479a4075062" />
 
 
 
